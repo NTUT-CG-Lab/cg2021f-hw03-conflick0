@@ -95,8 +95,11 @@
     const modelFiles = [
         'models/mmd/kizunaai/kizunaai.pmx',
         'models/mmd/『天宮こころ(Kokoro Amamiya)』/『天宮こころ(Kokoro Amamiya)』.pmx',
-		'models/mmd/るいのれ式物述有栖_配布用フォルダ/物述有栖.pmx'
+        'models/mmd/るいのれ式物述有栖_配布用フォルダ/物述有栖.pmx'
     ];
+
+    let modelData;
+    let colors = {red: 0xff0000, green: 0x00ff00, purple: 0x9933ff, blue: 0x3399ff};
 
     Ammo().then(function (AmmoLib) {
 
@@ -108,6 +111,10 @@
     });
 
     function init() {
+        loadJSON('model_data.json', function (resp) {
+            modelData = JSON.parse(resp).modellist;
+            addEyeLines();
+        });
 
         const container = document.createElement('div');
         document.body.appendChild(container);
@@ -147,7 +154,16 @@
         window.addEventListener('keydown', onKeyDown);
         window.addEventListener('resize', onWindowResize);
         //鏡頭控制
-
+        const cameracontrols = new OrbitControls(camera, renderer.domElement);
+        cameracontrols.minDistance = 10;
+        cameracontrols.maxDistance = 100;
+        cameracontrols.enableRotate = false;
+        cameracontrols.addEventListener('change', function () {
+            camera2.position.copy(camera.position);
+            camera3.position.copy(camera.position);
+            camera4.position.copy(camera.position);
+            camera5.position.copy(camera.position);
+        });
     }
 
     function onKeyDown(event) {
@@ -162,17 +178,90 @@
         }
     }
 
+    function addEyeLines() {
+        let modelPoints = getModelPoints();
+
+        let isHorizontal;
+
+        let dy = (modelPoints[0].y - modelPoints[2].y) / 4
+        let dx = (modelPoints[1].x - modelPoints[3].x) / 8
+
+        let point = {x: 0, y: 0};
+
+        let idx = 0;
+
+        // draw horizontal lines
+        isHorizontal = true;
+        point.x = modelPoints[0].x;
+        for (let i = 0; i <= 4; i++) {
+            point.y = modelPoints[0].y - dy * i;
+            addLine(`l${idx + 1}`, point, colors.green, isHorizontal);
+            idx++;
+        }
+
+        // draw vertical lines
+        isHorizontal = false;
+        point.y = modelPoints[1].y;
+        for (let i = 0; i <= 8; i++) {
+            point.x = modelPoints[1].x - dx * i;
+            addLine(`l${idx + 1}`, point, colors.red, isHorizontal);
+            idx++;
+        }
+    }
+
+    function getModelPoints() {
+        let pointData = modelData[modelIdx];
+        let propLocName = 'line_location'
+        let propLocXName = '';
+        let propLocYName = '';
+        let points = []
+
+        for (let i = 0; i < 4; i++) {
+            propLocXName = `${propLocName}x_${i + 1}`;
+            propLocYName = `${propLocName}y_${i + 1}`;
+            points.push({x: pointData[propLocXName], y: pointData[propLocYName]});
+        }
+
+        return points
+    }
+
+    function addLine(name, points, color, isHorizontal) {
+        let linePoints;
+        let lineLength = 1;
+
+        if (isHorizontal) {
+            linePoints = [
+                new THREE.Vector3(points.x - lineLength, points.y, 2),
+                new THREE.Vector3(points.x + lineLength, points.y, 2)
+            ]
+        } else {
+            linePoints = [
+                new THREE.Vector3(points.x, points.y - lineLength, 2),
+                new THREE.Vector3(points.x, points.y + lineLength, 2)
+            ]
+        }
+
+        let line = new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints(linePoints),
+            new THREE.LineBasicMaterial({
+                color: color
+            })
+        );
+        line.name = name;
+        scene.add(line);
+    }
+
     function moveModelIdx(offset) {
         return (modelIdx + offset + modelFiles.length) % modelFiles.length;
     }
 
     function loadModel(idx) {
-		function onProgress(xhr) {
-			if (xhr.lengthComputable) {
-				const percentComplete = xhr.loaded / xhr.total * 100;
-				console.log(Math.round(percentComplete, 2) + '% downloaded');
-			}
-		}
+        function onProgress(xhr) {
+            if (xhr.lengthComputable) {
+                const percentComplete = xhr.loaded / xhr.total * 100;
+                console.log(Math.round(percentComplete, 2) + '% downloaded');
+            }
+        }
 
         let modelFile = modelFiles[idx];
 
@@ -189,6 +278,18 @@
             scene.add(mesh);
 
         }, onProgress, null);
+    }
+
+    function loadJSON(file, callback) {
+        let xObj = new XMLHttpRequest();
+        xObj.overrideMimeType("application/json");
+        xObj.open('GET', file, true);
+        xObj.onreadystatechange = function () {
+            if (xObj.readyState === 4 && xObj.status === 200) {
+                callback(xObj.responseText);
+            }
+        };
+        xObj.send(null);
     }
 
     function onWindowResize() {

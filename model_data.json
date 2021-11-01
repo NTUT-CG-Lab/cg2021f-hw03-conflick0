@@ -1,38 +1,37 @@
 {
-    "modellist":[
-        {
-        "location":"models/mmd/るいのれ式物述有栖_配布用フォルダ/物述有栖.pmx",
-        "line_locationx_1":0,
-        "line_locationy_1":0,
-        "line_locationx_2":0,
-        "line_locationy_2":0,
-        "line_locationx_3":0,
-        "line_locationy_3":0,
-        "line_locationx_4":0,
-        "line_locationy_4":0
-        },
-        {
-        "location":"models/mmd/kizunaai/kizunaai.pmx",
-        "line_locationx_1":0,
-        "line_locationy_1":0,
-        "line_locationx_2":0,
-        "line_locationy_2":0,
-        "line_locationx_3":0,
-        "line_locationy_3":0,
-        "line_locationx_4":0,
-        "line_locationy_4":0
-        },
-        {
-        "location":"models/mmd/『天宮こころ(Kokoro Amamiya)』/『天宮こころ(Kokoro Amamiya)』.pmx",
-        "line_locationx_1":0,
-        "line_locationy_1":0,
-        "line_locationx_2":0,
-        "line_locationy_2":0,
-        "line_locationx_3":0,
-        "line_locationy_3":0,
-        "line_locationx_4":0,
-        "line_locationy_4":0
-        }
-    ]
-
+  "modellist": [
+    {
+      "location": "models/mmd/kizunaai/kizunaai.pmx",
+      "line_locationx_1": -0.4970104503186812,
+      "line_locationy_1": 8.010670956733897,
+      "line_locationx_2": -0.7295901611844262,
+      "line_locationy_2": 8.195785420484185,
+      "line_locationx_3": -0.4970104503186812,
+      "line_locationy_3": 8.409379032503743,
+      "line_locationx_4": -0.2596842147413898,
+      "line_locationy_4": 8.238504142888097
+    },
+    {
+      "location": "models/mmd/『天宮こころ(Kokoro Amamiya)』/『天宮こころ(Kokoro Amamiya)』.pmx",
+      "line_locationx_1": 0,
+      "line_locationy_1": 0,
+      "line_locationx_2": 0,
+      "line_locationy_2": 0,
+      "line_locationx_3": 0,
+      "line_locationy_3": 0,
+      "line_locationx_4": 0,
+      "line_locationy_4": 0
+    },
+    {
+      "location": "models/mmd/るいのれ式物述有栖_配布用フォルダ/物述有栖.pmx",
+      "line_locationx_1": 0,
+      "line_locationy_1": 0,
+      "line_locationx_2": 0,
+      "line_locationy_2": 0,
+      "line_locationx_3": 0,
+      "line_locationy_3": 0,
+      "line_locationx_4": 0,
+      "line_locationy_4": 0
+    }
+  ]
 }
