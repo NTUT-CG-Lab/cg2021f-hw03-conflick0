@@ -101,6 +101,10 @@
     let modelData;
     let colors = {red: 0xff0000, green: 0x00ff00, purple: 0x9933ff, blue: 0x3399ff};
 
+    let mouse = new THREE.Vector2();
+    let mouseDownPos = new THREE.Vector2();
+    let isMouseDown = false;
+
     Ammo().then(function (AmmoLib) {
 
         Ammo = AmmoLib;
@@ -151,6 +155,9 @@
         loadModel(0);
 
         //
+        window.addEventListener('mousedown', onMouseDown);
+        window.addEventListener('mouseup', onMouseUp);
+        window.addEventListener('mousemove', onMouseMove);
         window.addEventListener('keydown', onKeyDown);
         window.addEventListener('resize', onWindowResize);
         //鏡頭控制
@@ -164,6 +171,32 @@
             camera4.position.copy(camera.position);
             camera5.position.copy(camera.position);
         });
+    }
+
+    function onMouseMove(event) {
+        if (!isMouseDown) return;
+        event.preventDefault();
+        let dx = (event.clientX / window.innerWidth) * 2 - 1 - mouse.x;
+        let dy = -(event.clientY / window.innerHeight) * 2 + 1 - mouse.y;
+        rotateEye(dx, dy);
+    }
+
+    function onMouseDown(event) {
+        if(event.button === 2) return;
+        event.preventDefault();
+        isMouseDown = true;
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    }
+
+    function onMouseUp(event) {
+        event.preventDefault();
+        isMouseDown = false;
+    }
+
+    function rotateEye(dx, dy) {
+        mesh.skeleton.bones[88].rotation.x = -dy * 5;
+        mesh.skeleton.bones[88].rotation.y = dx * 5;
     }
 
     function onKeyDown(event) {
