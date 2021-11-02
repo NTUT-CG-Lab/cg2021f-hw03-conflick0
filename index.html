@@ -88,10 +88,9 @@
     let SCREEN_WIDTH = window.innerWidth;
     let SCREEN_HEIGHT = window.innerHeight;
     let aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
-    let frustumSize = 3;
-    let camera, camera2, camera3, camera4, camera5;
-    let cameraPos = new THREE.Vector3(0,8.1,3);
-    let cameraLookAtPos = new THREE.Vector3(0,8.1,0);
+    let frustumSize = 1.5;
+    let cameras = []
+    let cameraPos = new THREE.Vector3(0, 8.1, 3);
 
     let modelIdx = 0;
     const modelFiles = [
@@ -100,40 +99,51 @@
         'models/mmd/るいのれ式物述有栖_配布用フォルダ/物述有栖.pmx'
     ];
 
-    let modelData;
     let colors = {red: 0xff0000, green: 0x00ff00, purple: 0x9933ff, blue: 0x3399ff};
     let mouse = new THREE.Vector2();
     let mouseDownPos = new THREE.Vector2();
     let isMouseDown = false;
 
+    let mainView;
+    let subViews = []
+    let viewIdx = 0;
+
+    let modelPositions = [];
+    let subCameraPositions = [];
+
+    let modelEyeBoneIdxes = [];
+    let modelEyeIdx = 0;
+
     Ammo().then(function (AmmoLib) {
-
         Ammo = AmmoLib;
-
         init();
         animate();
-
     });
 
     function init() {
-        loadJSON('model_data.json', function (resp) {
-            modelData = JSON.parse(resp).modellist;
-            addEyeLines();
-        });
-
         const container = document.createElement('div');
         document.body.appendChild(container);
-        camera = new THREE.OrthographicCamera(0.5 * frustumSize * aspect / -2, 0.5 * frustumSize * aspect / 2, frustumSize / 2, frustumSize / -2, 0.1, 1000);
-        camera2 = new THREE.OrthographicCamera(0.25 * frustumSize * aspect / -2, 0.25 * frustumSize * aspect / 2, 0.5 * frustumSize / 2, 0.5 * frustumSize / -2, 0.1, 1000);
-        camera3 = new THREE.OrthographicCamera(0.25 * frustumSize * aspect / -2, 0.25 * frustumSize * aspect / 2, 0.5 * frustumSize / 2, 0.5 * frustumSize / -2, 0.1, 1000);
-        camera4 = new THREE.OrthographicCamera(0.25 * frustumSize * aspect / -2, 0.25 * frustumSize * aspect / 2, 0.5 * frustumSize / 2, 0.5 * frustumSize / -2, 0.1, 1000);
-        camera5 = new THREE.OrthographicCamera(0.25 * frustumSize * aspect / -2, 0.25 * frustumSize * aspect / 2, 0.5 * frustumSize / 2, 0.5 * frustumSize / -2, 0.1, 1000);
 
-        camera.position.copy(cameraPos);
-        camera2.position.copy(cameraPos);
-        camera3.position.copy(cameraPos);
-        camera4.position.copy(cameraPos);
-        camera5.position.copy(cameraPos);
+        loadJSON('model_data.json', function (resp) {
+            let modelData = JSON.parse(resp).modellist;
+            addEyeLines(modelData);
+        });
+
+        modelEyeBoneIdxes = readModelEyeBoneIdxes();
+
+        // read positions
+        modelPositions = readModelPositions();
+        subCameraPositions = readSubCameraPositions();
+
+        // read view
+        mainView = readMainView();
+        subViews = readSubViews();
+
+        // set main camera
+        setMainCamera(viewIdx);
+
+        // set sub camera positions
+        setSubCameraPositions(subCameraPositions, modelIdx);
 
         // scene
 
@@ -154,7 +164,7 @@
         renderer.autoClear = false;
         effect = new OutlineEffect(renderer);
 
-        loadModel(0);
+        loadModel(modelIdx);
 
         //
         window.addEventListener('mousedown', onMouseDown);
@@ -163,6 +173,136 @@
         window.addEventListener('keydown', onKeyDown);
         window.addEventListener('resize', onWindowResize);
         //鏡頭控制
+    }
+
+    function readModelEyeBoneIdxes(){
+        return [
+            [88, 86],
+            [49, 51],
+            [11, 13]
+        ];
+    }
+
+    function readModelPositions(){
+        return [
+            [
+                new THREE.Vector3(0, -10, 0),
+                new THREE.Vector3(10, -10, 0),
+                new THREE.Vector3(20, -10, 0),
+                new THREE.Vector3(30, -10, 0)
+            ],
+            [
+                new THREE.Vector3(0, -10, 0),
+                new THREE.Vector3(10, -10, 0),
+                new THREE.Vector3(20, -10, 0),
+                new THREE.Vector3(30, -10, 0)],
+            [
+                new THREE.Vector3(0, -10, 0),
+                new THREE.Vector3(10, -10, 0),
+                new THREE.Vector3(20, -10, 0),
+                new THREE.Vector3(30, -10, 0)
+            ]
+        ]
+    }
+
+    function readSubCameraPositions() {
+        return [
+            [
+                new THREE.Vector3(0, 8.1, 3),
+                new THREE.Vector3(10, 8.1, 3),
+                new THREE.Vector3(20, 8.1, 3),
+                new THREE.Vector3(30, 8.1, 3)
+            ],
+            [
+                new THREE.Vector3(0, 8.1, 3),
+                new THREE.Vector3(0, 8.1, 3),
+                new THREE.Vector3(0, 8.1, 3),
+                new THREE.Vector3(0, 8.1, 3)],
+            [
+                new THREE.Vector3(0, 8.1, 3),
+                new THREE.Vector3(0, 8.1, 3),
+                new THREE.Vector3(0, 8.1, 3),
+                new THREE.Vector3(0, 8.1, 3)
+            ]
+        ]
+    }
+
+    function readMainView() {
+        return {
+            camera: null,
+            viewport: {
+                x: 0,
+                y: 0,
+                w: SCREEN_WIDTH / 2,
+                h: SCREEN_HEIGHT
+            }
+        }
+    }
+
+    function readSubViews() {
+        return [
+            {
+                camera: createOrthographicCamera(),
+                model: null,
+                viewport: {
+                    x: SCREEN_WIDTH / 2,
+                    y: SCREEN_HEIGHT / 2,
+                    w: SCREEN_WIDTH / 4,
+                    h: SCREEN_HEIGHT / 2
+                }
+            },
+            {
+                camera: createOrthographicCamera(),
+                model: null,
+                viewport: {
+                    x: SCREEN_WIDTH / 2 + SCREEN_WIDTH / 4,
+                    y: SCREEN_HEIGHT / 2,
+                    w: SCREEN_WIDTH / 4,
+                    h: SCREEN_HEIGHT / 2
+                }
+            },
+            {
+                camera: createOrthographicCamera(),
+                model: null,
+                viewport: {
+                    x: SCREEN_WIDTH / 2,
+                    y: 0,
+                    w: SCREEN_WIDTH / 4,
+                    h: SCREEN_HEIGHT / 2
+                }
+            },
+            {
+                camera: createOrthographicCamera(),
+                model: null,
+                viewport: {
+                    x: SCREEN_WIDTH / 2 + SCREEN_WIDTH / 4,
+                    y: 0,
+                    w: SCREEN_WIDTH / 4,
+                    h: SCREEN_HEIGHT / 2
+                }
+            }
+        ]
+    }
+
+    function setMainCamera(viewIdx){
+        mainView.camera = subViews[viewIdx].camera;
+    }
+
+    function setSubCameraPositions(subCameraPositions, modelIdx) {
+        subViews.forEach(function (view, idx){
+            view.camera.position.copy(subCameraPositions[modelIdx][idx]);
+        });
+    }
+
+    function createOrthographicCamera() {
+        return new THREE.OrthographicCamera(
+            0.5 * frustumSize * aspect / -2,
+            0.5 * frustumSize * aspect / 2,
+            frustumSize / 2,
+            frustumSize / -2,
+            0.1,
+            1000
+        );
     }
 
     function onMouseMove(event) {
@@ -174,7 +314,7 @@
     }
 
     function onMouseDown(event) {
-        if(event.button === 2) return;
+        if (event.button === 2) return;
         event.preventDefault();
         isMouseDown = true;
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -187,8 +327,9 @@
     }
 
     function rotateEye(dx, dy) {
-        mesh.skeleton.bones[88].rotation.x = -dy * 5;
-        mesh.skeleton.bones[88].rotation.y = dx * 5;
+        let eyeBoneIdx = modelEyeBoneIdxes[modelIdx][modelEyeIdx];
+        subViews[viewIdx].model.skeleton.bones[eyeBoneIdx].rotation.x = -dy * 5;
+        subViews[viewIdx].model.skeleton.bones[eyeBoneIdx].rotation.y = dx * 5;
     }
 
     function onKeyDown(event) {
@@ -203,8 +344,8 @@
         }
     }
 
-    function addEyeLines() {
-        let modelPoints = getModelPoints();
+    function addEyeLines(modelData) {
+        let modelPoints = getModelPoints(modelData);
 
         let isHorizontal;
 
@@ -234,7 +375,7 @@
         }
     }
 
-    function getModelPoints() {
+    function getModelPoints(modelData) {
         let pointData = modelData[modelIdx];
         let propLocName = 'line_location'
         let propLocXName = '';
@@ -294,15 +435,15 @@
 
         const loader = new MMDLoader();
 
-        loader.load(modelFile, function (object) {
-            if (mesh !== null) scene.remove(mesh);
-
-            mesh = object;
-            mesh.position.y = -10;
-
-            scene.add(mesh);
-
-        }, onProgress, null);
+        subViews.forEach(function (view, idx){
+            loader.load(modelFile, function (object) {
+                console.log(object.skeleton.bones);
+                if (view.model !== null) scene.remove(view.model);
+                view.model = object;
+                view.model.position.copy(modelPositions[modelIdx][idx]);
+                scene.add(object);
+            }, onProgress, null);
+        });
     }
 
     function loadJSON(file, callback) {
@@ -318,74 +459,50 @@
     }
 
     function onWindowResize() {
-
         SCREEN_WIDTH = window.innerWidth;
         SCREEN_HEIGHT = window.innerHeight;
         aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
 
         effect.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
-        camera.left = 0.5 * frustumSize * aspect / -2;
-        camera.right = 0.5 * frustumSize * aspect / 2;
-        camera.top = frustumSize / 2;
-        camera.bottom = -frustumSize / 2;
-        camera.updateProjectionMatrix();
+        setViewSize(mainView);
 
-        camera2.left = 0.25 * frustumSize * aspect / -2;
-        camera2.right = 0.25 * frustumSize * aspect / 2;
-        camera2.top = 0.5 * frustumSize / 2;
-        camera2.bottom = -0.5 * frustumSize / 2;
-        camera2.updateProjectionMatrix();
-
-        camera3.left = 0.25 * frustumSize * aspect / -2;
-        camera3.right = 0.25 * frustumSize * aspect / 2;
-        camera3.top = 0.5 * frustumSize / 2;
-        camera3.bottom = -0.5 * frustumSize / 2;
-        camera3.updateProjectionMatrix();
-
-        camera4.left = 0.25 * frustumSize * aspect / -2;
-        camera4.right = 0.25 * frustumSize * aspect / 2;
-        camera4.top = 0.5 * frustumSize / 2;
-        camera4.bottom = -0.5 * frustumSize / 2;
-        camera4.updateProjectionMatrix();
-
-        camera5.left = 0.25 * frustumSize * aspect / -2;
-        camera5.right = 0.25 * frustumSize * aspect / 2;
-        camera5.top = 0.5 * frustumSize / 2;
-        camera5.bottom = -0.5 * frustumSize / 2;
-        camera5.updateProjectionMatrix();
+        subViews.forEach(function (view) {
+            setViewSize(view);
+        });
     }
 
     function animate() {
-
         requestAnimationFrame(animate);
         render();
-
     }
 
     function render() {
-        camera.lookAt(cameraLookAtPos);
-        camera2.lookAt(cameraLookAtPos);
-        camera3.lookAt(cameraLookAtPos);
-        camera4.lookAt(cameraLookAtPos);
-        camera5.lookAt(cameraLookAtPos);
-
         effect.clear();
 
-        effect.setViewport(0, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT);
-        effect.render(scene, camera);
+        setViewEffect(mainView);
 
-        effect.setViewport(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 2);
-        effect.render(scene, camera2);
+        subViews.forEach(function (view) {
+            setViewEffect(view);
+        })
+    }
 
-        effect.setViewport(SCREEN_WIDTH / 2 + SCREEN_WIDTH / 4, SCREEN_HEIGHT / 2, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 2);
-        effect.render(scene, camera3);
+    function setViewSize(view){
+        view.camera.left = 0.5 * frustumSize * aspect / -2;
+        view.camera.right = 0.5 * frustumSize * aspect / 2;
+        view.camera.top = frustumSize / 2;
+        view.camera.bottom = -frustumSize / 2;
+        view.camera.updateProjectionMatrix();
+    }
 
-        effect.setViewport(SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 2);
-        effect.render(scene, camera4);
-
-        effect.setViewport(SCREEN_WIDTH / 2 + SCREEN_WIDTH / 4, 0, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 2);
-        effect.render(scene, camera5);
+    function setViewEffect(view){
+        effect.setViewport(
+            view.viewport.x,
+            view.viewport.y,
+            view.viewport.w,
+            view.viewport.h
+        );
+        effect.render(scene, view.camera);
     }
 </script>
 
