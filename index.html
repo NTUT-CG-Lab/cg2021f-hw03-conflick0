@@ -342,6 +342,35 @@
             modelIdx = moveModelIdx(1)
             loadModel(modelIdx);
         }
+
+        if (event.key === '2') {
+            moveEyeLines(1)
+        }
+
+        if (event.key === '1') {
+            moveEyeLines(-1)
+        }
+    }
+
+    function moveEyeLines(offset) {
+        let eyeLength = 2;
+        let nextModelEyeIdx = modelEyeIdx + offset;
+
+        if (nextModelEyeIdx < 0 ){
+            viewIdx = (viewIdx - 1 + subViews.length) % subViews.length
+            modelEyeIdx = 1;
+            setMainCamera(viewIdx);
+            return;
+        }
+
+        if (nextModelEyeIdx > 1){
+            viewIdx = (viewIdx + 1 + subViews.length) % subViews.length
+            modelEyeIdx = 0;
+            setMainCamera(viewIdx);
+            return;
+        }
+
+        modelEyeIdx = (nextModelEyeIdx + eyeLength) % eyeLength;
     }
 
     function addEyeLines(modelData) {
