@@ -90,6 +90,10 @@
     let aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
     let frustumSize = 1.5;
 
+    let mouse = new THREE.Vector2();
+    let mouseDownPos = new THREE.Vector2();
+    let isMouseDown = false;
+
     let modelDataList = [];
     let currentModelIdx = 0;
 
@@ -155,6 +159,9 @@
 
         // set event listener
         window.addEventListener('keydown', onKeyDown);
+        window.addEventListener('mousedown', onMouseDown);
+        window.addEventListener('mouseup', onMouseUp);
+        window.addEventListener('mousemove', onMouseMove);
         window.addEventListener('resize', onWindowResize);
     }
 
@@ -285,6 +292,11 @@
         });
     }
 
+    function setEyeRotation(dx, dy) {
+        subViews[currentViewIdx].eyeRotation[currentModelEyeIdx].x = -dy * 2;
+        subViews[currentViewIdx].eyeRotation[currentModelEyeIdx].y = dx * 2;
+    }
+
     function updateCurrentModelIdx(offset) {
         currentModelIdx = (currentModelIdx + offset + modelDataList.length) % modelDataList.length;
     }
@@ -344,6 +356,27 @@
             updateCurrentModelIdx(1);
             loadModel(currentModelIdx);
         }
+    }
+
+    function onMouseMove(event) {
+        if (!isMouseDown) return;
+        event.preventDefault();
+        let dx = (event.clientX / window.innerWidth) * 2 - 1 - mouse.x;
+        let dy = -(event.clientY / window.innerHeight) * 2 + 1 - mouse.y;
+        setEyeRotation(dx, dy);
+    }
+
+    function onMouseDown(event) {
+        if (event.button === 2) return;
+        event.preventDefault();
+        isMouseDown = true;
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    }
+
+    function onMouseUp(event) {
+        event.preventDefault();
+        isMouseDown = false;
     }
 
     function onWindowResize() {
@@ -414,11 +447,6 @@
             );
             effect.render(scene, view.camera);
         })
-    }
-
-    function setEyeRotation(dx, dy) {
-        subViews[currentViewIdx].eyeRotation[currentModelEyeIdx].x = dx;
-        subViews[currentViewIdx].eyeRotation[currentModelEyeIdx].y = dy;
     }
 
 </script>
