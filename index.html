@@ -101,7 +101,7 @@
     let subViews = [];
     let currentViewIdx = 0;
 
-    let modelCameraPositions = [];
+    let subViewCameraPositions = [];
     let modelPositions = [];
 
     let currentModelEyeIdx = 0;
@@ -146,7 +146,7 @@
             modelDataList = JSON.parse(json)['modelList'];
 
             // read positions
-            modelCameraPositions = readPositions(modelDataList, 'cameraPosition');
+            subViewCameraPositions = readPositions(modelDataList, 'subViewCameraPosition');
             modelPositions = readPositions(modelDataList, 'modelPosition');
 
             // set camera positions and set main view came
@@ -167,7 +167,7 @@
 
     function readMainView() {
         return {
-            camera: null,
+            camera: createOrthographicCamera(),
             model: null,
             eyeRotation: [
                 {
@@ -272,7 +272,7 @@
     function readPositions(modelDataList, propName) {
         let positions = [];
         let pos;
-        let z = propName === 'cameraPosition' ? frustumSize : 0
+        let z = propName === 'subViewCameraPosition' ? frustumSize : 0
 
         modelDataList.forEach(function (modelData) {
             pos = modelData[propName];
@@ -283,12 +283,14 @@
     }
 
     function setMainViewCamera(viewIdx) {
-        mainView.camera = subViews[viewIdx].camera;
+        mainView.camera.position.copy(subViews[viewIdx].camera.position);
+        mainView.camera.position.x = modelDataList[currentModelIdx].mainViewCameraPosition[currentModelEyeIdx].x;
+        mainView.camera.position.y = modelDataList[currentModelIdx].mainViewCameraPosition[currentModelEyeIdx].y;
     }
 
     function setSubViewCameraPositions(modelIdx) {
         subViews.forEach(function (view) {
-            view.camera.position.copy(modelCameraPositions[modelIdx]);
+            view.camera.position.copy(subViewCameraPositions[modelIdx]);
         });
     }
 
@@ -307,19 +309,15 @@
 
         if (nextModelEyeIdx < 0 ){
             currentViewIdx = (currentViewIdx - 1 + subViews.length) % subViews.length
-            currentModelEyeIdx = 1;
-            setMainViewCamera(currentViewIdx);
-            return;
         }
 
         if (nextModelEyeIdx > 1){
             currentViewIdx = (currentViewIdx + 1 + subViews.length) % subViews.length
-            currentModelEyeIdx = 0;
-            setMainViewCamera(currentViewIdx);
-            return;
         }
 
         currentModelEyeIdx = (nextModelEyeIdx + eyeLength) % eyeLength;
+
+        setMainViewCamera(currentViewIdx);
     }
 
     function createOrthographicCamera() {

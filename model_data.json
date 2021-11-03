@@ -24,7 +24,17 @@
           "y": 8.238504142888097
         }
       ],
-      "cameraPosition": {
+      "mainViewCameraPosition": [
+        {
+          "x": -0.49,
+          "y": 8.1
+        },
+        {
+          "x": 0.49,
+          "y": 8.1
+        }
+      ],
+      "subViewCameraPosition": {
         "y": 8.1
       },
       "modelPosition": {
@@ -55,7 +65,17 @@
           "y": 8.238504142888097
         }
       ],
-      "cameraPosition": {
+      "mainViewCameraPosition": [
+        {
+          "x": -0.49,
+          "y": 8.1
+        },
+        {
+          "x": 0.49,
+          "y": 8.1
+        }
+      ],
+      "subViewCameraPosition": {
         "y": 8.1
       },
       "modelPosition": {
@@ -86,7 +106,17 @@
           "y": 8.238504142888097
         }
       ],
-      "cameraPosition": {
+      "mainViewCameraPosition": [
+        {
+          "x": -0.49,
+          "y": 8.1
+        },
+        {
+          "x": 0.49,
+          "y": 8.1
+        }
+      ],
+      "subViewCameraPosition": {
         "y": 8.1
       },
       "modelPosition": {
