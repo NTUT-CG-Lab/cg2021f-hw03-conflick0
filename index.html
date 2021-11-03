@@ -301,6 +301,27 @@
         currentModelIdx = (currentModelIdx + offset + modelDataList.length) % modelDataList.length;
     }
 
+    function moveEyeLines(offset) {
+        let eyeLength = 2;
+        let nextModelEyeIdx = currentModelEyeIdx + offset;
+
+        if (nextModelEyeIdx < 0 ){
+            currentViewIdx = (currentViewIdx - 1 + subViews.length) % subViews.length
+            currentModelEyeIdx = 1;
+            setMainViewCamera(currentViewIdx);
+            return;
+        }
+
+        if (nextModelEyeIdx > 1){
+            currentViewIdx = (currentViewIdx + 1 + subViews.length) % subViews.length
+            currentModelEyeIdx = 0;
+            setMainViewCamera(currentViewIdx);
+            return;
+        }
+
+        currentModelEyeIdx = (nextModelEyeIdx + eyeLength) % eyeLength;
+    }
+
     function createOrthographicCamera() {
         return new THREE.OrthographicCamera(
             0.5 * frustumSize * aspect / -2,
@@ -355,6 +376,14 @@
         if (event.key === 'D' || event.key === 'd') {
             updateCurrentModelIdx(1);
             loadModel(currentModelIdx);
+        }
+
+        if (event.key === '2') {
+            moveEyeLines(1)
+        }
+
+        if (event.key === '1') {
+            moveEyeLines(-1)
         }
     }
 
@@ -419,9 +448,12 @@
     }
 
     function setMainViewEffect() {
-        let eyeBoneIdx = modelDataList[currentModelIdx].eyeBoneIdxes[currentModelEyeIdx];
-        mainView.model.skeleton.bones[eyeBoneIdx].rotation.x = subViews[currentViewIdx].eyeRotation[currentModelEyeIdx].x;
-        mainView.model.skeleton.bones[eyeBoneIdx].rotation.y = subViews[currentViewIdx].eyeRotation[currentModelEyeIdx].y;
+        let eyeBoneIdxes = modelDataList[currentModelIdx].eyeBoneIdxes;
+        eyeBoneIdxes.forEach(function (eyeBoneIdx, i) {
+            mainView.model.skeleton.bones[eyeBoneIdx].rotation.x = subViews[currentViewIdx].eyeRotation[i].x;
+            mainView.model.skeleton.bones[eyeBoneIdx].rotation.y = subViews[currentViewIdx].eyeRotation[i].y;
+        });
+
         effect.setViewport(
             mainView.viewport.x,
             mainView.viewport.y,
