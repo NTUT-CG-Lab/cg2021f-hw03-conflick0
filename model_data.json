@@ -44,8 +44,8 @@
     {
       "modelPath": "models/mmd/『天宮こころ(Kokoro Amamiya)』/『天宮こころ(Kokoro Amamiya)』.pmx",
       "eyeBoneIdxes": [
-        49,
-        51
+        51,
+        49
       ],
       "rightEyeLinePositions": [
         {
@@ -68,15 +68,15 @@
       "mainViewCameraPosition": [
         {
           "x": -0.49,
-          "y": 8.1
+          "y": 5.5
         },
         {
           "x": 0.49,
-          "y": 8.1
+          "y": 5.5
         }
       ],
       "subViewCameraPosition": {
-        "y": 8.1
+        "y": 5.5
       },
       "modelPosition": {
         "y": -10

@@ -149,12 +149,8 @@
             subViewCameraPositions = readPositions(modelDataList, 'subViewCameraPosition');
             modelPositions = readPositions(modelDataList, 'modelPosition');
 
-            // set camera positions and set main view came
-            setSubViewCameraPositions(currentModelIdx);
-            setMainViewCamera(currentViewIdx);
-
             // load model
-            loadModel(currentModelIdx);
+            loadModel(currentModelIdx, currentViewIdx);
         })
 
         // set event listener
@@ -343,7 +339,7 @@
         xObj.send(null);
     }
 
-    function loadModel(modelIdx) {
+    function loadModel(modelIdx, viewIdx) {
         function onProgress(xhr) {
             if (xhr.lengthComputable) {
                 const percentComplete = xhr.loaded / xhr.total * 100;
@@ -362,18 +358,23 @@
             mainView.model = object;
             mainView.model.position.copy(modelPositions[modelIdx]);
             scene.add(mainView.model);
+
+            // set camera positions and set main view came
+            setSubViewCameraPositions(modelIdx);
+            setMainViewCamera(viewIdx);
+
         }, onProgress, null);
     }
 
     function onKeyDown(event) {
         if (event.key === 'A' || event.key === 'a') {
             updateCurrentModelIdx(-1);
-            loadModel(currentModelIdx);
+            loadModel(currentModelIdx, currentViewIdx);
         }
 
         if (event.key === 'D' || event.key === 'd') {
             updateCurrentModelIdx(1);
-            loadModel(currentModelIdx);
+            loadModel(currentModelIdx, currentViewIdx);
         }
 
         if (event.key === '2') {
