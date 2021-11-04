@@ -88,7 +88,7 @@
     let SCREEN_WIDTH = window.innerWidth;
     let SCREEN_HEIGHT = window.innerHeight;
     let aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
-    let frustumSize = 1.5;
+    let mainFrustumSize = 1, subFrustumSize = 1.5;
 
     let mouse = new THREE.Vector2();
     let mouseDownPos = new THREE.Vector2();
@@ -105,6 +105,14 @@
     let modelPositions = [];
 
     let currentModelEyeIdx = 0;
+
+    let modelEyePositions = [];
+
+    let colors = {red: 0xff0000, green: 0x00ff00, purple: 0x9933ff, blue: 0x3399ff};
+    let lineColors = [
+        {hor: colors.blue, ver: colors.purple},
+        {hor: colors.green, ver: colors.red}
+    ];
 
     Ammo().then(function (AmmoLib) {
 
@@ -148,6 +156,7 @@
             // read positions
             subViewCameraPositions = readPositions(modelDataList, 'subViewCameraPosition');
             modelPositions = readPositions(modelDataList, 'modelPosition');
+            modelEyePositions = readModelEyePositions(modelDataList);
 
             // load model
             loadModel(currentModelIdx, currentViewIdx);
@@ -163,7 +172,7 @@
 
     function readMainView() {
         return {
-            camera: createOrthographicCamera(),
+            camera: createOrthographicCamera(mainFrustumSize),
             model: null,
             eyeRotation: [
                 {
@@ -180,14 +189,15 @@
                 y: 0,
                 w: SCREEN_WIDTH / 2,
                 h: SCREEN_HEIGHT
-            }
+            },
+            eyeLines: []
         }
     }
 
     function readSubViews() {
         return [
             {
-                camera: createOrthographicCamera(),
+                camera: createOrthographicCamera(subFrustumSize),
                 eyeRotation: [
                     {
                         x: -0,
@@ -206,7 +216,7 @@
                 }
             },
             {
-                camera: createOrthographicCamera(),
+                camera: createOrthographicCamera(subFrustumSize),
                 eyeRotation: [
                     {
                         x: -0,
@@ -225,7 +235,7 @@
                 }
             },
             {
-                camera: createOrthographicCamera(),
+                camera: createOrthographicCamera(subFrustumSize),
                 eyeRotation: [
                     {
                         x: -0,
@@ -244,7 +254,7 @@
                 }
             },
             {
-                camera: createOrthographicCamera(),
+                camera: createOrthographicCamera(subFrustumSize),
                 eyeRotation: [
                     {
                         x: -0,
@@ -265,10 +275,20 @@
         ]
     }
 
+    function readModelEyePositions(modelDataList) {
+        let eyePositions = [];
+
+        modelDataList.forEach(function (modelData) {
+            eyePositions.push(modelData.rightEyeLinePositions);
+        });
+
+        return eyePositions;
+    }
+
     function readPositions(modelDataList, propName) {
         let positions = [];
         let pos;
-        let z = propName === 'subViewCameraPosition' ? frustumSize : 0
+        let z = propName === 'subViewCameraPosition' ? 4 : 0
 
         modelDataList.forEach(function (modelData) {
             pos = modelData[propName];
@@ -279,9 +299,9 @@
     }
 
     function setMainViewCamera(viewIdx) {
-        mainView.camera.position.copy(subViews[viewIdx].camera.position);
         mainView.camera.position.x = modelDataList[currentModelIdx].mainViewCameraPosition[currentModelEyeIdx].x;
         mainView.camera.position.y = modelDataList[currentModelIdx].mainViewCameraPosition[currentModelEyeIdx].y;
+        mainView.camera.position.z = subViews[viewIdx].camera.position.z;
     }
 
     function setSubViewCameraPositions(modelIdx) {
@@ -299,24 +319,29 @@
         currentModelIdx = (currentModelIdx + offset + modelDataList.length) % modelDataList.length;
     }
 
-    function moveEyeLines(offset) {
+    function moveNextEye(offset) {
         let eyeLength = 2;
         let nextModelEyeIdx = currentModelEyeIdx + offset;
+        let mirrorScale = -offset;
 
-        if (nextModelEyeIdx < 0 ){
-            currentViewIdx = (currentViewIdx - 1 + subViews.length) % subViews.length
+        if (nextModelEyeIdx < 0) {
+            currentViewIdx = (currentViewIdx - 1 + subViews.length) % subViews.length;
+            mirrorScale = offset;
         }
 
-        if (nextModelEyeIdx > 1){
-            currentViewIdx = (currentViewIdx + 1 + subViews.length) % subViews.length
+        if (nextModelEyeIdx > 1) {
+            currentViewIdx = (currentViewIdx + 1 + subViews.length) % subViews.length;
+            mirrorScale = offset;
         }
 
         currentModelEyeIdx = (nextModelEyeIdx + eyeLength) % eyeLength;
 
         setMainViewCamera(currentViewIdx);
+
+        mirrorEyeLines(mirrorScale);
     }
 
-    function createOrthographicCamera() {
+    function createOrthographicCamera(frustumSize) {
         return new THREE.OrthographicCamera(
             0.5 * frustumSize * aspect / -2,
             0.5 * frustumSize * aspect / 2,
@@ -325,6 +350,73 @@
             0.1,
             1000
         );
+    }
+
+    function createLine(points, color, isHorizontal) {
+        let linePoints;
+        let lineLength = 0.5;
+
+        if (isHorizontal) {
+            linePoints = [
+                new THREE.Vector3(points.x - lineLength, points.y, 2),
+                new THREE.Vector3(points.x + lineLength, points.y, 2)
+            ]
+        } else {
+            linePoints = [
+                new THREE.Vector3(points.x, points.y - lineLength, 2),
+                new THREE.Vector3(points.x, points.y + lineLength, 2)
+            ]
+        }
+
+        return new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints(linePoints),
+            new THREE.LineBasicMaterial({
+                color: color
+            })
+        );
+    }
+
+    function addEyeLines(modelIdx) {
+        let isHorizontal;
+        let eyePositions = modelEyePositions[modelIdx];
+        let line = null;
+
+        let dy = (eyePositions[0].y - eyePositions[2].y) / 4
+        let dx = (eyePositions[1].x - eyePositions[3].x) / 8
+        let point = {x: 0, y: 0};
+
+        // draw horizontal lines
+        isHorizontal = true;
+        point.x = eyePositions[0].x;
+        for (let i = 0; i <= 4; i++) {
+            point.y = eyePositions[0].y - dy * i;
+            line = createLine(point, lineColors[0].hor, isHorizontal);
+            scene.add(line);
+            mainView.eyeLines.push(line);
+        }
+
+        // draw vertical lines
+        isHorizontal = false;
+        point.y = eyePositions[1].y;
+        for (let i = 0; i <= 8; i++) {
+            point.x = eyePositions[1].x - dx * i;
+            line = createLine(point, lineColors[0].ver, isHorizontal);
+            scene.add(line);
+            mainView.eyeLines.push(line);
+        }
+    }
+
+    function mirrorEyeLines(mirrorScale) {
+        let eyeLines = mainView.eyeLines;
+        eyeLines.forEach(function (line, idx){
+            let cloneLine = line.clone();
+            cloneLine.scale.set(mirrorScale, 1, 1);
+            if(idx < 4) cloneLine.material.color.set(lineColors[currentModelEyeIdx].hor);
+            else cloneLine.material.color.set(lineColors[currentModelEyeIdx].ver);
+            scene.remove(line);
+            scene.add(cloneLine);
+            mainView.eyeLines[idx] = cloneLine;
+        });
     }
 
     function loadJSON(file, callback) {
@@ -359,6 +451,8 @@
             mainView.model.position.copy(modelPositions[modelIdx]);
             scene.add(mainView.model);
 
+            addEyeLines(modelIdx);
+
             // set camera positions and set main view came
             setSubViewCameraPositions(modelIdx);
             setMainViewCamera(viewIdx);
@@ -378,11 +472,11 @@
         }
 
         if (event.key === '2') {
-            moveEyeLines(1)
+            moveNextEye(1)
         }
 
         if (event.key === '1') {
-            moveEyeLines(-1)
+            moveNextEye(-1)
         }
     }
 
@@ -414,17 +508,17 @@
 
         effect.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
-        mainView.camera.left = 0.5 * frustumSize * aspect / -2;
-        mainView.camera.right = 0.5 * frustumSize * aspect / 2;
-        mainView.camera.top = frustumSize / 2;
-        mainView.camera.bottom = -frustumSize / 2;
+        mainView.camera.left = 0.5 * subFrustumSize * aspect / -2;
+        mainView.camera.right = 0.5 * subFrustumSize * aspect / 2;
+        mainView.camera.top = subFrustumSize / 2;
+        mainView.camera.bottom = -subFrustumSize / 2;
         mainView.camera.updateProjectionMatrix();
 
         subViews.forEach(function (view) {
-            view.camera.left = 0.25 * frustumSize * aspect / -2;
-            view.camera.right = 0.25 * frustumSize * aspect / 2;
-            view.camera.top = 0.5 * frustumSize / 2;
-            view.camera.bottom = -0.5 * frustumSize / 2;
+            view.camera.left = 0.25 * subFrustumSize * aspect / -2;
+            view.camera.right = 0.25 * subFrustumSize * aspect / 2;
+            view.camera.top = 0.5 * subFrustumSize / 2;
+            view.camera.bottom = -0.5 * subFrustumSize / 2;
             view.camera.updateProjectionMatrix();
         })
     }
@@ -435,19 +529,24 @@
     }
 
     function render() {
-
         effect.clear();
 
         let mesh = mainView.model;
 
         if (!mesh) return;
 
-        setMainViewEffect();
         setSubViewEffect();
+        setMainViewEffect();
     }
 
     function setMainViewEffect() {
         let eyeBoneIdxes = modelDataList[currentModelIdx].eyeBoneIdxes;
+
+        // main view, show eye lines
+        mainView.eyeLines.forEach(function (line){
+            line.position.z = 0;
+        });
+
         eyeBoneIdxes.forEach(function (eyeBoneIdx, i) {
             mainView.model.skeleton.bones[eyeBoneIdx].rotation.x = subViews[currentViewIdx].eyeRotation[i].x;
             mainView.model.skeleton.bones[eyeBoneIdx].rotation.y = subViews[currentViewIdx].eyeRotation[i].y;
@@ -459,12 +558,28 @@
             mainView.viewport.w,
             mainView.viewport.h
         );
+
         effect.render(scene, mainView.camera);
+
     }
 
     function setSubViewEffect() {
         let eyeBoneIdxes = modelDataList[currentModelIdx].eyeBoneIdxes;
-        subViews.forEach(function (view) {
+
+        subViews.forEach(function (view,idx) {
+
+            // current view, show eye lines
+            if(idx === currentViewIdx){
+                mainView.eyeLines.forEach(function (line){
+                    line.position.z = 0;
+                });
+            }
+            else{
+                mainView.eyeLines.forEach(function (line){
+                    line.position.z = 2;
+                });
+            }
+
             eyeBoneIdxes.forEach(function (eyeBoneIdx, i) {
                 mainView.model.skeleton.bones[eyeBoneIdx].rotation.x = view.eyeRotation[i].x;
                 mainView.model.skeleton.bones[eyeBoneIdx].rotation.y = view.eyeRotation[i].y;
@@ -477,7 +592,7 @@
                 view.viewport.h
             );
             effect.render(scene, view.camera);
-        })
+        });
     }
 
 </script>
