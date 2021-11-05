@@ -24,21 +24,27 @@
           "y": 8.238504142888097
         }
       ],
-      "mainViewCameraPosition": [
+      "mainCameraPosition": [
         {
           "x": -0.49,
-          "y": 8.1
+          "y": 8.1,
+          "z": 4
         },
         {
           "x": 0.49,
-          "y": 8.1
+          "y": 8.1,
+          "z": 4
         }
       ],
-      "subViewCameraPosition": {
-        "y": 8.1
+      "subCameraPosition": {
+        "x": 0,
+        "y": 8.1,
+        "z": 4
       },
       "modelPosition": {
-        "y": -10
+        "x": 0,
+        "y": -10,
+        "z": 0
       }
     },
     {
@@ -50,36 +56,42 @@
       "rightEyeLinePositions": [
         {
           "x": -0.4970104503186812,
-          "y": 8.010670956733897
+          "y": 5.5
         },
         {
           "x": -0.7295901611844262,
-          "y": 8.195785420484185
+          "y": 5.4
         },
         {
           "x": -0.4970104503186812,
-          "y": 8.409379032503743
+          "y": 5.6
         },
         {
           "x": -0.2596842147413898,
-          "y": 8.238504142888097
+          "y": 5.5
         }
       ],
-      "mainViewCameraPosition": [
+      "mainCameraPosition": [
         {
           "x": -0.49,
-          "y": 5.5
+          "y": 5.5,
+          "z": 4
         },
         {
           "x": 0.49,
-          "y": 5.5
+          "y": 5.5,
+          "z": 4
         }
       ],
-      "subViewCameraPosition": {
-        "y": 5.5
+      "subCameraPosition": {
+        "x": 0,
+        "y": 5.5,
+        "z": 4
       },
       "modelPosition": {
-        "y": -10
+        "x": 0,
+        "y": -10,
+        "z": 0
       }
     },
     {
@@ -106,21 +118,27 @@
           "y": 8.238504142888097
         }
       ],
-      "mainViewCameraPosition": [
+      "mainCameraPosition": [
         {
           "x": -0.49,
-          "y": 8.1
+          "y": 8.1,
+          "z": 4
         },
         {
           "x": 0.49,
-          "y": 8.1
+          "y": 8.1,
+          "z": 4
         }
       ],
-      "subViewCameraPosition": {
-        "y": 8.1
+      "subCameraPosition": {
+        "x": 0,
+        "y": 8.1,
+        "z": 4
       },
       "modelPosition": {
-        "y": -10
+        "x": 0,
+        "y": -10,
+        "z": 0
       }
     }
   ]
