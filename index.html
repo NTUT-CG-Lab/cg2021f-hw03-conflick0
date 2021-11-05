@@ -499,17 +499,15 @@
     }
 
     function setMainViewEffect() {
-        let eyeBoneIdxes = modelDataList[currentModelIdx].eyeBoneIdxes;
+        let eyeBoneIdx = modelDataList[currentModelIdx].eyeBoneIdxes[currentEyeIdx];
 
         // show main camera eye lines
         eyeLines[currentModelIdx].forEach(function (line) {
             line.position.z = 0;
         });
 
-        eyeBoneIdxes.forEach(function (eyeBoneIdx, i) {
-            mesh.skeleton.bones[eyeBoneIdx].rotation.x = subEyeRotations[currentModelIdx][currentSubCameraIdx][i].x;
-            mesh.skeleton.bones[eyeBoneIdx].rotation.y = subEyeRotations[currentModelIdx][currentSubCameraIdx][i].y;
-        });
+        mesh.skeleton.bones[eyeBoneIdx].rotation.x = subEyeRotations[currentModelIdx][currentSubCameraIdx][currentEyeIdx].x;
+        mesh.skeleton.bones[eyeBoneIdx].rotation.y = subEyeRotations[currentModelIdx][currentSubCameraIdx][currentEyeIdx].y;
 
         effect.setViewport(
             mainCameraViewport.x,
