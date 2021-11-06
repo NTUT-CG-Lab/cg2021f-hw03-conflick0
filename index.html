@@ -148,6 +148,8 @@
 
         initCurrentIdxes();
 
+        initFirstModelEyeRotations();
+
         loadJSON('model_data.json', function (json) {
             modelDataList = JSON.parse(json)['modelList'];
             initEyeLines();
@@ -158,7 +160,17 @@
         window.addEventListener('mousedown', onMouseDown);
         window.addEventListener('mouseup', onMouseUp);
         window.addEventListener('mousemove', onMouseMove);
-        window.addEventListener('resize', onWindowResize);
+    }
+
+    function initFirstModelEyeRotations(){
+        subEyeRotations[0][0][0].x = deg2rad(8.4);
+        subEyeRotations[0][0][1].x = deg2rad(8.4);
+        subEyeRotations[0][1][0].x = deg2rad(-11.4);
+        subEyeRotations[0][1][1].x = deg2rad(-11.4);
+        subEyeRotations[0][2][0].y = deg2rad(8);
+        subEyeRotations[0][2][1].y = deg2rad(12.6);
+        subEyeRotations[0][3][0].y = deg2rad(-12.6);
+        subEyeRotations[0][3][1].y = deg2rad(-8);
     }
 
     function initLights() {
@@ -230,8 +242,8 @@
     }
 
     function setEyeRotation(dx, dy) {
-        subEyeRotations[currentModelIdx][currentSubCameraIdx][currentEyeIdx].x = -dy * 2;
-        subEyeRotations[currentModelIdx][currentSubCameraIdx][currentEyeIdx].y = dx * 2;
+        subEyeRotations[currentModelIdx][currentSubCameraIdx][currentEyeIdx].x = -dy;
+        subEyeRotations[currentModelIdx][currentSubCameraIdx][currentEyeIdx].y = dx;
     }
 
     function updateCurrentIdx(offset) {
@@ -404,6 +416,14 @@
         subEyeRotations[currentModelIdx][currentSubCameraIdx][currentEyeIdx].y = -srcSubEyeRotations.y;
     }
 
+    function deg2rad(deg) {
+        return deg * (Math.PI / 180);
+    }
+
+    function rad2deg(rad) {
+        return rad * (180 / Math.PI);
+    }
+
     function loadModel() {
         function onProgress(xhr) {
             if (xhr.lengthComputable) {
@@ -447,6 +467,35 @@
         xObj.send(null);
     }
 
+    function saveJSON() {
+        let data = [];
+        subEyeRotations.forEach(function (subEyes, idx) {
+            data.push({
+                modelName: modelDataList[idx].modelPath,
+                modelEyeRotationAngles: {
+                    Right_X_negative_angle: -rad2deg(subEyes[0][0].x),
+                    Left_X_negative_angle: -rad2deg(subEyes[0][1].x),
+                    Right_X_positive_angle: -rad2deg(subEyes[1][0].x),
+                    Left_X_positive_angle: -rad2deg(subEyes[1][1].x),
+                    Right_Y_negative_angle: -rad2deg(subEyes[2][0].y),
+                    Left_Y_negative_angle: -rad2deg(subEyes[2][1].y),
+                    Right_Y_positive_angle: -rad2deg(subEyes[3][0].y),
+                    Left_Y_positive_angle: -rad2deg(subEyes[3][1].y),
+                }
+            });
+        });
+
+
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {
+            type: "json/plain"
+        }));
+        a.setAttribute("download", "data.json");
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
     function onKeyDown(event) {
         if (event.key === 'A' || event.key === 'a') {
             rmEyeLines();
@@ -471,6 +520,10 @@
         if (event.key === 'q' || event.key === 'Q') {
             copyEyeRotation();
         }
+
+        if (event.key === 's' || event.key === 'S') {
+            saveJSON();
+        }
     }
 
     function onMouseMove(event) {
@@ -492,29 +545,6 @@
     function onMouseUp(event) {
         event.preventDefault();
         isMouseDown = false;
-    }
-
-    function onWindowResize() {
-
-        SCREEN_WIDTH = window.innerWidth;
-        SCREEN_HEIGHT = window.innerHeight;
-        aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
-
-        effect.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-
-        mainCamera.left = 0.5 * mainFrustumSize * aspect / -2;
-        mainCamera.right = 0.5 * mainFrustumSize * aspect / 2;
-        mainCamera.top = mainFrustumSize / 2;
-        mainCamera.bottom = -mainFrustumSize / 2;
-        mainCamera.updateProjectionMatrix();
-
-        subCameras.forEach(function (camera) {
-            camera.left = 0.25 * subFrustumSize * aspect / -2;
-            camera.right = 0.25 * subFrustumSize * aspect / 2;
-            camera.top = 0.5 * subFrustumSize / 2;
-            camera.bottom = -0.5 * subFrustumSize / 2;
-            camera.updateProjectionMatrix();
-        });
     }
 
     function animate() {

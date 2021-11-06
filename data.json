@@ -1,0 +1,41 @@
+[
+  {
+    "modelName": "models/mmd/kizunaai/kizunaai.pmx",
+    "modelEyeRotationAngles": {
+      "Right_X_negative_angle": -8.556169740620293,
+      "Left_X_negative_angle": -8.556169740620293,
+      "Right_X_positive_angle": 11.306367157248241,
+      "Left_X_positive_angle": 11.306367157248241,
+      "Right_Y_negative_angle": -8.057218994027203,
+      "Left_Y_negative_angle": -12.45884788891243,
+      "Right_Y_positive_angle": 12.45884788891243,
+      "Left_Y_positive_angle": 8.057218994027203
+    }
+  },
+  {
+    "modelName": "models/mmd/『天宮こころ(Kokoro Amamiya)』/『天宮こころ(Kokoro Amamiya)』.pmx",
+    "modelEyeRotationAngles": {
+      "Right_X_negative_angle": 0,
+      "Left_X_negative_angle": 0,
+      "Right_X_positive_angle": 0,
+      "Left_X_positive_angle": 0,
+      "Right_Y_negative_angle": 0,
+      "Left_Y_negative_angle": 0,
+      "Right_Y_positive_angle": 0,
+      "Left_Y_positive_angle": 0
+    }
+  },
+  {
+    "modelName": "models/mmd/るいのれ式物述有栖_配布用フォルダ/物述有栖.pmx",
+    "modelEyeRotationAngles": {
+      "Right_X_negative_angle": 0,
+      "Left_X_negative_angle": 0,
+      "Right_X_positive_angle": 0,
+      "Left_X_positive_angle": 0,
+      "Right_Y_negative_angle": 0,
+      "Left_Y_negative_angle": 0,
+      "Right_Y_positive_angle": 0,
+      "Left_Y_positive_angle": 0
+    }
+  }
+]
