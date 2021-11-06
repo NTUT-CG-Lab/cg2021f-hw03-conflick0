@@ -343,20 +343,19 @@
     function moveNextEye(offset) {
         let eyeLength = 2;
         let nextEyeIdx = currentEyeIdx + offset;
-        let mirrorScale = -offset;
+        let mirrorScale = offset;
 
-        if (nextEyeIdx < 0) {
-            currentSubCameraIdx = (currentSubCameraIdx - 1 + subCameras.length) % subCameras.length;
-            mirrorScale = offset;
-        }
-
-        if (nextEyeIdx > 1) {
-            currentSubCameraIdx = (currentSubCameraIdx + 1 + subCameras.length) % subCameras.length;
-            mirrorScale = offset;
+        if (nextEyeIdx < 0 || nextEyeIdx > 1) {
+            // move next view eye update sub camera idx, and without reverse mirror scale
+            currentSubCameraIdx = (currentSubCameraIdx + offset + subCameras.length) % subCameras.length;
+        } else {
+            // next eye still in the same view, reverse mirror scale
+            mirrorScale = mirrorScale === 0 ? mirrorScale : -mirrorScale;
         }
 
         currentEyeIdx = (nextEyeIdx + eyeLength) % eyeLength;
 
+        // update main camera position to look current eye
         setMainCameraPosition();
 
         mirrorEyeLines(mirrorScale);
@@ -373,6 +372,36 @@
             scene.add(cloneLine);
             eyeLines[currentModelIdx][idx] = cloneLine;
         });
+    }
+
+    function copyEyeRotation() {
+        let srcSubEyeRotations = subEyeRotations[currentModelIdx][currentSubCameraIdx][currentEyeIdx];
+        if (currentEyeIdx !== 0) return;
+
+        if (currentSubCameraIdx === 2) {
+            // copy no.3 subview right eye to no.4 subview left eye
+            moveNextEye(1);
+            moveNextEye(1);
+            moveNextEye(1);
+            copyEyeRotationValue(srcSubEyeRotations);
+            return;
+        }
+
+        if (currentSubCameraIdx === 3) {
+            // copy no.4 subview left eye to no.4 subview right eye
+            moveNextEye(-1);
+            copyEyeRotationValue(srcSubEyeRotations);
+            return;
+        }
+
+        // copy right eye to left eye,when currentSubCameraIdx is 0 or 1
+        moveNextEye(1);
+        copyEyeRotationValue(srcSubEyeRotations);
+    }
+
+    function copyEyeRotationValue(srcSubEyeRotations) {
+        subEyeRotations[currentModelIdx][currentSubCameraIdx][currentEyeIdx].x = srcSubEyeRotations.x;
+        subEyeRotations[currentModelIdx][currentSubCameraIdx][currentEyeIdx].y = -srcSubEyeRotations.y;
     }
 
     function loadModel() {
@@ -437,6 +466,10 @@
 
         if (event.key === '1') {
             moveNextEye(-1)
+        }
+
+        if (event.key === 'q' || event.key === 'Q') {
+            copyEyeRotation();
         }
     }
 
